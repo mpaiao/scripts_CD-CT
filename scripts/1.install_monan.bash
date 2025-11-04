@@ -16,9 +16,29 @@
 #
 #-----------------------------------------------------------------------------#
 
-#Fixed parameters ------------------------------------------------------------#
-github_link_CONVERT_MPAS="https://github.com/monanadmin/convert_mpas.git"
-#-----------------------------------------------------------------------------#
+
+#--- Function that shows usage.
+function show_usage() {
+   echo " Usage: "
+   echo ""
+   echo " ${0} -gm GIT_MONAN -bm TAG_MONAN \\"
+   echo "    -gc GIT_CONVERT_MPAS -bc TAG_CONVERT_MPAS"
+   echo ""
+   echo " List of optional flags: "
+   echo ""
+   echo " -gm GIT_MONAN   -- GitHub handle for MONAN. For example:"
+   echo "                    https://github.com/monanadmin/MONAN-Model.git"
+   echo " -bm TAG_MONAN   -- branch or tag name of the MONAN repository. For example:"
+   echo "                    \"develop\"."
+   echo " -gm GIT_CONVERT -- GitHub handle for MONAN. For example:"
+   echo "                    https://github.com/monanadmin/MONAN-Model.git"
+   echo " -bm TAG_CONVERT -- branch or tag name of the MONAN repository. For example:"
+   echo "                    \"develop\"."
+   echo ""
+}
+#---~---
+
+
 
 #Functions -------------------------------------------------------------------#
 function checkout_system() {
@@ -50,25 +70,46 @@ function checkout_system() {
 #-----------------------------------------------------------------------------#
 
 
-if [ $# -lt 1 ]
-then
-   echo ""
-   echo "Instructions: execute the command below"
-   echo ""
-   echo "${0} [G] [M] [C]"
-   echo ""
-   echo "G   :: MONAN GitHub link of your personal fork, eg: https://github.com/MYUSER/MONAN-Model.git"
-   echo "M   :: MONAN tag or branch name of your personal fork. (will be used 'develop' if not informed)" 
-   echo "C   :: Convert_MPAS tag from ${github_link_CONVERT_MPAS} (will be used 'develop' if not informed)"
-   echo ""
-   exit
-fi
+#--- Parse arguments.
+github_link_MONAN="https://github.com/monanadmin/MONAN-Model.git"
+tag_or_branch_name_MONAN=1.3.0-rc
+github_link_CONVERT_MPAS="https://github.com/monanadmin/convert_mpas.git"
+tag_or_branch_name_CONVERT_MPAS=1.0.1
+while [[ ${#} > 0 ]]
+do
+   key="${1}"
+   case ${key} in
+   -bc)
+      tag_or_branch_name_CONVERT_MPAS="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -bm)
+      tag_or_branch_name_MONAN="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -gc)
+      github_link_CONVERT_MPAS="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -gm)
+      github_link_MONAN="${2}"
+      shift 2 # past flag and argument
+      ;;
+   *)
+      echo "Unknown key-value argument pair."
+      show_usage
+      exit 2
+      ;;
+   esac
+done
+#---~---
 
 
-# Set environment variables exports:
+#--- Set environment variables exports:
 echo ""
-echo -e "\033[1;32m==>\033[0m Moduling environment for MONAN model...\n"
+echo -e "\033[1;32m==>\033[0m Load MONAN settings.\n"
 . setenv.bash
+#---~---
 
 # Standart directories variables:---------------------------------------
 DIRHOMES=${DIR_SCRIPTS}/scripts_CD-CT;  mkdir -p ${DIRHOMES}  
@@ -83,13 +124,9 @@ EXECS=${DIRHOMED}/execs;                mkdir -p ${EXECS}
 
 
 # Input variables:-----------------------------------------------------
-github_link_MONAN=${1};   #github_link=https://github.com/monanadmin/MONAN-Model.git
-tag_or_branch_name_MONAN=${2}
 tag_or_branch_name_MONAN=${tag_or_branch_name_MONAN:="1.0.0"}
-echo "MONAN branch name in use: ${tag_or_branch_name_MONAN}"
-
-tag_or_branch_name_CONVERT_MPAS=${3}
 tag_or_branch_name_CONVERT_MPAS=${tag_or_branch_name_CONVERT_MPAS:="1.0.0"}
+echo "MONAN branch name in use: ${tag_or_branch_name_MONAN}"
 echo "convert_mpas branch name in use: ${tag_or_branch_name_CONVERT_MPAS}"
 #----------------------------------------------------------------------
 

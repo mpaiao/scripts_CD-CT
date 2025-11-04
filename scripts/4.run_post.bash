@@ -15,48 +15,88 @@
 #
 #-----------------------------------------------------------------------------#
 
-if [ $# -ne 4 -a $# -ne 1 ]
-then
-   echo ""
-   echo "Instructions: execute the command below"
-   echo ""
-   echo "${0} ]EXP_NAME/OP] RESOLUTION LABELI FCST"
-   echo ""
-   echo "EXP_NAME    :: Forcing: GFS"
-   echo "OP          :: clean: remove all temporary files createed in the last run."
-   echo "            :: Others options to be added later..."
-   echo "RESOLUTION  :: number of points in resolution model grid, e.g: 1024002  (24 km)"
-   echo "LABELI      :: Initial date YYYYMMDDHH, e.g.: 2024010100"
-   echo "FCST        :: Forecast hours, e.g.: 24 or 36, etc."
-   echo ""
-   echo "24 hour forcast example:"
-   echo "${0} GFS 1024002 2024010100 24"
-   echo "${0} GFS   40962 2024010100 48"
-   echo "Cleannig temp files example:"
-   echo "${0} clean"
-   echo ""
 
-   exit
-fi
 
-# Set environment variables exports:
+#--- Function that shows usage.
+function show_usage() {
+   echo " Usage: "
+   echo ""
+   echo " ${0} [-c] [-e EXP ] [-r RES] [-i YYYYMMDDHH] [-f FCST]"
+   echo ""
+   echo " List of optional flags: "
+   echo ""
+   echo " -c              -- Clean files from previous runs."
+   echo " -e EXP          -- meteorological drivers. For example, GFS"
+   echo " -r RES          -- grid resolution. Options are:"
+   echo "                    2621442 (~ 15 km)"
+   echo "                    1024002 (~ 24 km)"
+   echo "                    40962   (~ 120 km)"
+   echo " -i YYYYMMDDHH   -- Initial time. For example if 22 Sept 2025 00 UTC, set it to:"
+   echo "                    2025092200"
+   echo " -f FCST         -- Simulation length in hours, e.g., 24 or 48."
+   echo ""
+   echo " All settings can be defined directly in the script."
+   echo ""
+}
+#---~---
+
+
+#--- Set environment variables exports:
 echo ""
-echo -e "\033[1;32m==>\033[0m Moduling environment for MONAN model...\n"
+echo -e "\033[1;32m==>\033[0m Load MONAN settings.\n"
 . setenv.bash
+#---~---
 
-if [ $# -eq 1 ]
+
+
+
+#--- Default input variables:
+CLEAN=false
+EXP="GFS"
+RES=1024002
+YYYYMMDDHHi=2025041418
+FCST=24
+#---~---
+
+
+#--- Parse arguments.
+while [[ ${#} > 0 ]]
+do
+   key="${1}"
+   case ${key} in
+   -c)
+      CLEAN=true
+      shift 1 # Past flag
+      ;;
+   -e)
+      EXP="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -f)
+      FCST="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -i)
+      YYYYMMDDHHi="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -r)
+      RES="${2}"
+      shift 2 # past flag and argument
+      ;;
+   *)
+      echo "Unknown key-value argument pair."
+      show_usage
+      exit 2
+      ;;
+   esac
+done
+#---~---
+
+if ${CLEAN}
 then
-   op=$(echo "${1}" | tr '[A-Z]' '[a-z]')
-   if [ ${op} = "clean" ]
-   then
-      clean_post_tmp_files
-      exit
-   else
-      echo "Should type just \"clean\" for cleanning."
-      echo "${0} clean"
-      echo ""
-      exit
-   fi   
+   clean_pre_tmp_files
+   exit
 fi
 
 
@@ -71,13 +111,6 @@ SOURCES=${DIRHOMES}/sources;           mkdir -p ${SOURCES}
 EXECS=${DIRHOMED}/execs;               mkdir -p ${EXECS}
 #----------------------------------------------------------------------
 
-
-# Input variables:--------------------------------------
-EXP=${1};         #EXP=GFS
-RES=${2};         #RES=1024002
-YYYYMMDDHHi=${3}; #YYYYMMDDHHi=2024042000
-FCST=${4};        #FCST=40
-#-------------------------------------------------------
 mkdir -p ${DATAOUT}/${YYYYMMDDHHi}/Post/logs
 
 
@@ -89,8 +122,8 @@ maxpostpernode=20    # <------ qtde max de convert_mpas por no!
 
 # Variables for flex outpout interval from streams.atmosphere------------------------
 t_strout=$(cat ${DATAIN}/namelists/streams.atmosphere.TEMPLATE | sed -n '/<stream name="diagnostics"/,/<\/stream>/s/.*output_interval="\([^"]*\)".*/\1/p')
-t_stroutsec=$(echo ${t_strout} | awk -F: '{print ($1 * 3600) + ($2 * 60) + $3}')
-t_strouthor=$(echo "scale=4; (${t_stroutsec}/60)/60" | bc)
+t_stroutsec=`echo ${t_strout} | awk -F: '{print ($1 * 3600) + ($2 * 60) + $3}'`
+t_strouthor=`echo "scale=4; (${t_stroutsec}/60)/60" | bc`
 #------------------------------------------------------------------------------------
 
 # Format to HH:MM:SS t_strout (output_interval)
@@ -98,28 +131,38 @@ IFS=":" read -r h m s <<< "${t_strout}"
 printf -v t_strout "%02d:%02d:%02d" "$h" "$m" "$s"
 
 # Calculating default parameters for different resolutions
-if [ $RES -eq 1024002 ]; then  #24Km
-   NLAT=720  #180/0.25
-   NLON=1440 #360/0.25
-   STARTLAT=-90.0
-   STARTLON=0.0
-   ENDLAT=90.0
-   ENDLON=360.0
-elif [ $RES -eq 2621442 ]; then  #15Km
+case ${RES} in
+2621442)  #15Km
    NLAT=1200 #180/0.15
    NLON=2400 #360/0.15
    STARTLAT=-90.0
    STARTLON=0.0
    ENDLAT=90.0
    ENDLON=360.0
-elif [ $RES -eq 40962 ]; then  #120Km
+   ;;
+1024002)  #24Km
+   NLAT=720  #180/0.25
+   NLON=1440 #360/0.25
+   STARTLAT=-90.0
+   STARTLON=0.0
+   ENDLAT=90.0
+   ENDLON=360.0
+   ;;
+40962)  #120Km
    NLAT=150 #180/1.2
    NLON=300 #360/1.2
    STARTLAT=-90.0
    STARTLON=0.0
    ENDLAT=90.0
    ENDLON=360.0
-fi
+   ;;
+*)
+   echo -e "${RED}==>${NC} ****** FATAL ERROR ******"
+   echo -e "${RED}==>${NC} Invalid resolution ${RES}!"
+   show_usage
+   exit 1
+   ;;
+esac
 #-------------------------------------------------------
 
 clean_post_tmp_files

@@ -97,7 +97,7 @@ export NETCDF=/mnt/beegfs/monan/libs_openmpi/netcdf
 export PNETCDF=/mnt/beegfs/monan/libs_openmpi/PnetCDF
 export NETCDFDIR=${NETCDF}
 export PNETCDFDIR=${PNETCDF}
-export DIRDADOS=/mnt/beegfs/monan/dados/MONAN_v0.5.0
+export DIRDADOS=/mnt/beegfs/marcos.longo/dados/MONAN_NoahMP+Colour
 export OPERDIR=/oper/dados/ioper/tempo
 
 # Colors:
@@ -114,8 +114,8 @@ how_many_nodes () {
    deno=${2}
    num=$(echo "${nume}/${deno}" | bc -l)  
    how_many_nodes_int=$(echo "${num}/1" | bc)
-   dif=$(echo "scale=0; (${num}-${how_many_nodes_int})*100/1" | bc)
-   rest=$(echo "scale=0; (((${num}-${how_many_nodes_int})*${deno})+0.5)/1" | bc -l)
+   dif=`echo "scale=0; (${num}-${how_many_nodes_int})*100/1" | bc`
+   rest=`echo "scale=0; (((${num}-${how_many_nodes_int})*${deno})+0.5)/1" | bc -l`
    if [ ${dif} -eq 0 ]; then how_many_nodes_left=0; else how_many_nodes_left=1; fi
    if [ ${how_many_nodes_int} -eq 0 ]; then how_many_nodes_int=1; how_many_nodes_left=0; rest=0; fi
    how_many_nodes=$(echo "${how_many_nodes_int}+${how_many_nodes_left}" | bc )
