@@ -224,7 +224,7 @@ export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:${HOME}/local/lib64
 
 cd ${DIRRUN}
 
-. ${SCRIPTS}/setenv.bash
+. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
 
 echo "-- PBS_JOBID: \$PBS_JOBID"
 
