@@ -437,7 +437,7 @@ wait
 case "${MONAN_ONETWO}" in
 -m12)
 
-   . ${SCRIPTS}/../.venv/bin/activate
+   . ${PYTHON_ENV_PATH}/bin/activate
 
    #---~---
    #   Group vertical levels.
@@ -645,7 +645,7 @@ fi
 cd ${SCRIPTS}
 chmod 755 ${DATAOUT}/${YYYYMMDDHHi}/Post/*
 time ${SCRIPTS}/make_template.bash ${MONAN_ONETWO} ${dv_VARTABLE}                          \
-   -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP}-f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
+   -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
 
 for ((n=0 ; n<total_nodes ; n++)) 
 do
