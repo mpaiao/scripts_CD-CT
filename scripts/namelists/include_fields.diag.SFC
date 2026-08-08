@@ -1,48 +1,48 @@
-initial_time
-xtime
-Time
-lonCell
-latCell
-isltyp
-isctyp
-ivgtyp
-landmask
-ter
-surface_pressure
-mslp
-t2m
-q2
-rainc
-rainnc
-uzonal_surface
-umeridional_surface
-u10
-v10
-lai
-sfcrunoff
-udrunoff
-z0
-canwat
-smstot
-hpbl
-delta
-acswdnb
-aclwdnb
-acswupb
-aclwupb
-achfx
-acqfx
-aclh
-acgrdflx
-acnoahres
-cldfrac_tot_UPP
-t2mvxy
-t2mbxy
-t2mxy
-q2mvxy
-q2mbxy
-q2mxy
-neexy
-gppxy
-nppxy
-fvegxy
+initial_time         initial_time
+xtime                xtime
+Time                 time
+lonCell              loncell
+latCell              latcell
+isltyp               isltyp
+isctyp               isctyp
+ivgtyp               ivgtyp
+landmask             landmask
+ter                  ter
+surface_pressure     surface_pressure
+mslp                 mslp
+t2m                  t2m
+q2                   q2
+rainc                rainc
+rainnc               rainnc
+uzonal_surface       uzonal_surface
+umeridional_surface  umeridional_surface
+u10                  u10
+v10                  v10
+lai                  lai
+sfcrunoff            sfcrunoff
+udrunoff             udrunoff
+z0                   z0
+canwat               canwat
+smstot               smstot
+hpbl                 hpbl
+delta                delta
+acswdnb              acswdnb
+aclwdnb              aclwdnb
+acswupb              acswupb
+aclwupb              aclwupb
+achfx                achfx
+acqfx                acqfx
+aclh                 aclh
+acgrdflx             acgrdflx
+acnoahres            acnoahres
+cldfrac_tot_UPP      cldfrac_tot_upp
+t2mvxy               t2mvxy
+t2mbxy               t2mbxy
+t2mxy                t2mxy
+q2mvxy               q2mvxy
+q2mbxy               q2mbxy
+q2mxy                q2mxy
+neexy                neexy
+gppxy                gppxy
+nppxy                nppxy
+fvegxy               fvegxy
