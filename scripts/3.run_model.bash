@@ -278,8 +278,11 @@ cp -f ${DATAIN}/fixed/Vtable.GFS ${DIRRUN}
 cp -f ${DATAIN}/fixed/ugwp_limb_tau.nc ${DIRRUN}
 
 
-if [[ ${EXP} = "GFS" ]]
-then
+# ML: I replaced the if construction with a case one, as this is a case selection, but I 
+#     wonder if the sed commands should be applied in all cases instead of only when EXP 
+#     is set to GFS...
+case "${EXP}" in
+GFS)
    sed -e "s,#LABELI#,${start_date},g;s,#FCSTS#,${DD_HHMMSS_forecast},g;s,#RES#,${RES},g;
 s,#CONFIG_DT#,${CONFIG_DT},g;s,#CONFIG_LEN_DISP#,${CONFIG_LEN_DISP},g;s,#CONFIG_CONV_INTERVAL#,${CONFIG_CONV_INTERVAL},g" \
    ${SCRIPTS}/namelists/namelist.atmosphere.TEMPLATE > ${DIRRUN}/namelist.atmosphere
@@ -287,7 +290,10 @@ s,#CONFIG_DT#,${CONFIG_DT},g;s,#CONFIG_LEN_DISP#,${CONFIG_LEN_DISP},g;s,#CONFIG_
    sed -e "s,#RES#,${RES},g;s,#CIORIG#,${EXP},g;s,#LABELI#,${YYYYMMDDHHi},g;s,#NLEV#,${NLEV},g;
 s,#OUTPUT_DIAG_INTERVAL#,${OUTPUT_DIAG_INTERVAL},g" \
    ${SCRIPTS}/namelists/streams.atmosphere.TEMPLATE > ${DIRRUN}/streams.atmosphere
-fi
+   ;;
+esac
+
+
 cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.output ${DIRRUN}
 cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.diagnostics${VARTABLE} ${DIRRUN}/stream_list.atmosphere.diagnostics
 cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.diag_ugwp${VARTABLE} ${DIRRUN}/stream_list.atmosphere.diag_ugwp
@@ -391,9 +397,12 @@ esac
 mv ${DIRRUN}/model.bash ${DATAOUT}/${YYYYMMDDHHi}/Model/logs
 
 
-#-----Loop que verifica se os arquivos foram gerados corretamente (>0)-----
+#---~---
+#   Loop that checks whether the files were properly produced or not. 
+#---~---
 output_interval=${t_strouthor}
 nfiles=$(echo "$FCST/$output_interval + 1" | bc)
+missed=false
 for ii in $(seq 1 ${nfiles})
 do
    i=$(printf "%04d" ${ii})
@@ -403,11 +412,14 @@ do
 
    if [[ ! -s ${DATAOUT}/${YYYYMMDDHHi}/Model/${file} ]]
    then
-    echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"   
-    echo -e  "${RED}==>${NC} [${0}] At least the file ${DATAOUT}/${YYYYMMDDHHi}/Model/${file} was not generated. \n"
-    exit -1
-   fi
+      if ! ${missed}
+      then
+         echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"
+         missed=true
+      fi
 
+      echo -e  "${RED}==>${NC} [${0}] File ${DATAOUT}/${YYYYMMDDHHi}/Model/${file} was not generated. \n"
+   fi
 done
 
 JOBID=$(sed -n '5p' ${DATAOUT}/${YYYYMMDDHHi}/Model/logs/model.bash.o | awk '{print $3}' | sed "s/.pbs-ha//g")
@@ -416,4 +428,9 @@ mv ${DATAOUT}/${YYYYMMDDHHi}/Model/logs/model.bash.e ${DATAOUT}/${YYYYMMDDHHi}/M
 chmod a+r ${DATAOUT}/${YYYYMMDDHHi}/Model/logs/model.bash.o.${JOBID}
 chmod a+r ${DATAOUT}/${YYYYMMDDHHi}/Model/logs/model.bash.e.${JOBID}
 
-rm -fr ${DIRRUN}
+if ${missed}
+then
+   exit -1
+else
+   rm -fr ${DIRRUN}
+fi
