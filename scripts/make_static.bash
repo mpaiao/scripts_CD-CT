@@ -6,15 +6,10 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-m12] [-e EXP ] [-f FCST] [-r RES] [-t YYYYMMDDHH]"
+   echo " ${0} [-h] [-e EXP ] [-f FCST] [-r RES] [-t YYYYMMDDHH]"
    echo ""
    echo " List of optional flags: "
    echo " -h              -- Shows this message."
-   echo " -m12            -- Is this a MONAN run based on 1.2.0-rc and branches derived"
-   echo "                    from this version (e.g., feature/monan-757-NF)? This is a"
-   echo "                    temporary flag that will be removed once the versions"
-   echo "                    containing Noah-MP are merged into the new release. This"
-   echo "                    allows the script to manage older code and still run on jaci."
    echo ""
    echo " List of **required** flags: "
    echo ""
@@ -37,7 +32,6 @@ function show_usage() {
 
 
 #--- Default input variables:
-MONAN_ONETWO=""
 EXP=""
 RES=""
 YYYYMMDDHHi=""
@@ -61,10 +55,6 @@ do
    -h)
       show_usage
       exit 0
-      ;;
-   -m12)
-      MONAN_ONETWO="${key}"
-      shift 1 # past flag
       ;;
    -r)
       RES="${2}"
@@ -106,7 +96,7 @@ fi
 
 
 #--- Set environment variables exports:
-. setenv.bash ${MONAN_ONETWO}
+. setenv.bash
 #---~---
 
 echo ""
@@ -200,7 +190,7 @@ ulimit -s unlimited
 ulimit -c unlimited
 ulimit -v unlimited
 
-. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 
 cd ${DIRRUN}
 chmod 755 *

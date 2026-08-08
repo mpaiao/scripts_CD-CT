@@ -21,39 +21,6 @@ echo -e "${GREEN}==>${NC} Load MONAN settings (setenv.bash).\n"
 #---~----
 
 
-#--- Parse arguments.
-USE_ONETWO=false
-while [[ ${#} > 0 ]]
-do
-   key="${1}"
-   case ${key} in
-   -m12)
-      USE_ONETWO=true
-      shift 1 # past flag
-      ;;
-   *)
-      echo ""
-      echo " Unknown key-value argument pair."
-      echo " Usage: "
-      echo ""
-      echo " . ${BASH_SOURCE[0]} [-m12]"
-      echo ""
-      echo " List of optional flags: "
-      echo ""
-      echo " -m12             -- Is this a MONAN run based on 1.2.0-rc and branches"
-      echo "                     derived from this version (e.g., feature/monan-757-NF)?"
-      echo "                     This is a temporary flag that will be removed once the"
-      echo "                     versions containing Noah-MP are merged into the new"
-      echo "                     release. This allows the script to manage older code and"
-      echo "                     still run on jaci."
-      echo ""
-      return
-      ;;
-   esac
-done
-#---~---
-
-
 # Choose your compiler here (only on Jaci; on Egeon the compiler is fixed to ‘gnu’):
 export COMPILER=intel
 #export COMPILER=gnu

@@ -22,17 +22,12 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-m12] [-bc TAG_CONVERT_MPAS] [-bm TAG_MONAN] [-gm GIT_MONAN] \\"
+   echo " ${0} [-h] [-bc TAG_CONVERT_MPAS] [-bm TAG_MONAN] [-gm GIT_MONAN] \\"
    echo "    [-gc GIT_CONVERT_MPAS]"
    echo ""
    echo " List of optional flags: "
    echo ""
    echo " -h              -- Shows this message."
-   echo " -m12            -- Is this a MONAN run based on 1.2.0-rc and branches derived"
-   echo "                    from this version (e.g., feature/monan-757-NF)? This is a"
-   echo "                    temporary flag that will be removed once the versions"
-   echo "                    containing Noah-MP are merged into the new release. This"
-   echo "                    allows the script to manage older code and still run on jaci."
    echo ""
    echo " List of **required** flags: "
    echo ""
@@ -85,7 +80,6 @@ function checkout_system() {
 #   Retrieve configuration.
 #---~---
 #--- Default settings (all empty)
-MONAN_ONETWO=""
 github_link_MONAN=""
 tag_or_branch_name_MONAN=""
 github_link_CONVERT_MPAS=""
@@ -120,10 +114,6 @@ do
       show_usage
       exit 0
       ;;
-   -m12)
-      MONAN_ONETWO="${key}"
-      shift 1 # past flag
-      ;;
    *)
       echo ""
       echo " Option \"${key}\" is not valid."
@@ -155,7 +145,7 @@ fi
 
 
 #--- Set environment variables exports:
-. setenv.bash ${MONAN_ONETWO}
+. setenv.bash
 #---~---
 
 echo ""
@@ -178,7 +168,7 @@ CONVERT_MPAS_DIR=${SOURCES}/convert_mpas_${tag_or_branch_name_CONVERT_MPAS}
 #$(sed -i "s;DIR_DADOS=.*$;DIR_DADOS=$(dirname $(dirname $(pwd)));" setenv.bash)
 $(sed -i "s;MONANDIR=.*$;MONANDIR=$MONANDIR;" setenv.bash)
 chmod 755 ${SCRIPTS}/setenv.bash
-. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 
 #----------------------------------------------------------------------
 
@@ -270,7 +260,7 @@ cat << EOF > make-all.sh
 #    SHAREDLIB=true - generate position-independent code suitable for use in a shared library. Default is false.
 
 cd ${SCRIPTS}
-. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 cd $MONANDIR
 
 rm -rf $MONANDIR/default_inputs/ $MONANDIR/src/core_atmosphere/physics/physics_wrf/files

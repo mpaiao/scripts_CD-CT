@@ -21,18 +21,12 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-m12] [-v VARTABLE] [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] \\"
+   echo " ${0} [-h] [-v VARTABLE] [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] \\"
    echo "    [-l NLEV] [-r RES] [-t YYYYMMDDHH]"
    echo ""
    echo " List of optional flags: "
    echo ""
    echo " -h                  -- Shows this message."
-   echo " -m12                -- Is this a MONAN run based on 1.2.0-rc and branches"
-   echo "                        derived from this version (e.g., feature/monan-757-NF)?"
-   echo "                        This is a temporary flag that will be removed once the"
-   echo "                        versions containing Noah-MP are merged into the new"
-   echo "                        release. This allows the script to manage older code and"
-   echo "                        still run on jaci."
    echo " -v VARTABLE         -- Suffix for defining which version of the"
    echo "                        stream_list_atmosphere.diagnostics template to use."
    echo "                        The default is to not use any suffix."
@@ -62,7 +56,6 @@ function show_usage() {
 
 
 #--- Default input variables:
-MONAN_ONETWO=""
 EXP=""
 RES=""
 YYYYMMDDHHi=""
@@ -97,10 +90,6 @@ do
    -l)
       NLEV="${2}"
       shift 2 # Past flag and argument
-      ;;
-   -m12)
-      MONAN_ONETWO="${key}"
-      shift 1 # past flag
       ;;
    -r)
       RES="${2}"
@@ -150,7 +139,7 @@ fi
 
 
 #--- Set environment variables exports:
-. setenv.bash ${MONAN_ONETWO}
+. setenv.bash
 #---~---
 
 echo ""
@@ -331,7 +320,7 @@ ulimit -v unlimited
 ulimit -s unlimited
 
 cd ${DIRRUN}
-. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 
 date
 beg_secs=\`date +"%s"\`

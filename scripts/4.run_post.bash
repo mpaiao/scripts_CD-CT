@@ -20,18 +20,12 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-m12] [-v VARTABLE] [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] \\"
+   echo " ${0} [-h] [-v VARTABLE] [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] \\"
    echo "    [-l N_MODEL_LEV] [-r RES] [-t YYYYMMDDHH]"
    echo ""
    echo " List of optional flags: "
    echo ""
    echo " -h                  -- Shows this message."
-   echo " -m12                -- Is this a MONAN run based on 1.2.0-rc and branches"
-   echo "                        derived from this version (e.g., feature/monan-757-NF)?"
-   echo "                        This is a temporary flag that will be removed once the"
-   echo "                        versions containing Noah-MP are merged into the new"
-   echo "                        release. This allows the script to manage older code and"
-   echo "                        still run on jaci."
    echo " -v VARTABLE         -- Suffix for defining which version of the"
    echo "                        stream_list_atmosphere.diagnostics template to use."
    echo "                        The default is to not use any suffix."
@@ -61,7 +55,6 @@ function show_usage() {
 
 
 #--- Default input variables:
-MONAN_ONETWO=""
 EXP=""
 RES=""
 YYYYMMDDHHi=""
@@ -97,10 +90,6 @@ do
       N_MODEL_LEV="${2}"
       shift 2 # Past flag and argument
       ;;
-   -m12)
-      MONAN_ONETWO="${key}"
-      shift 1 # past flag
-      ;;
    -r)
       RES="${2}"
       shift 2 # past flag and argument
@@ -134,7 +123,7 @@ done
 
 
 #--- Set environment variables exports:
-. setenv.bash ${MONAN_ONETWO}
+. setenv.bash
 #---~---
 
 
@@ -326,13 +315,6 @@ echo "Max ${maxpostpernode} submits per nodes."
 how_many_nodes ${nfiles} ${maxpostpernode}
 #---~---
 
-#--- Set the python environment
-case "${MONAN_ONETWO}" in
--m12)
-   . ${SCRIPTS}/setenv_python.bash
-   ;;
-esac
-
 
 #---~---
 #   Make paths and create files/links for each convert_mpas output:
@@ -394,10 +376,9 @@ do
    
 cat << EOSH >> ${DIRRUN}/PostAtmos_node.${node}.sh 
 
-MONAN_ONETWO="${MONAN_ONETWO}"
 DIRRUN="${DIRRUN}"
 
-. ${SCRIPTS}/setenv.bash ${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 echo "-- PBS_JOBID: \$PBS_JOBID"
 chmod 755 \${DIRRUN}/*
 
@@ -433,65 +414,6 @@ done
 
 # Make sure that the job remains active whilst convert_mpas runs in the background
 wait
-
-#---~---
-#   For the older MONAN versions, we must group variables by levels. This code is being
-# temporarily added back here until Noah-MP is fully integrated to a stable MONAN release.
-#---~---
-case "\${MONAN_ONETWO}" in
--m12)
-
-   # Load python configuration on node
-   . \${SCRIPTS}/setenv_python.bash
-
-
-   . \${PYTHON_ENV_PATH}/bin/activate
-
-   #---~---
-   #   Group vertical levels.
-   #---~---
-   for ii in \$(seq  ${inicio} ${fim})
-   do
-      i=\$(printf "%04d" \${ii})
-      cd \${DIRRUN}/dir.\${i}
-      ${PYTHON_EXEC} \${SCRIPTS}/group_levels.py \${DIRRUN}/dir.\${i} latlon.nc latlon_\${i}.nc \
-         1> \${DATAOUT}/${YYYYMMDDHHi}/Post/logs/out_group_levels_${node}.log 2>&1 &
-      echo "${PYTHON_EXEC} \${SCRIPTS}/group_levels.py \${DIRRUN}/dir.\${i} latlon.nc latlon_\${i}.nc"
-   done
-   #---~---
-
-   #--- Make sure that the job remains active whilst convert_mpas runs in the background.
-   wait
-   #---~---
-
-   #---~---
-   #   Rename files so the subsequent steps are not dependent upon the MONAN/convertmpas version.
-   #---~---
-   for ii in \$(seq  ${inicio} ${fim})
-   do
-      i=\$(printf "%04d" \${ii})
-      cd \${DIRRUN}/dir.\${i}
-      #--- Move file to the default latlon.nc
-      if [[ -s latlon_\${i}.nc ]]
-      then
-         /bin/rm latlon.nc
-         /bin/mv latlon_\${i}.nc latlon.nc
-      else
-         echo -e "\${RED}==>\${NC} *** FATAL ERROR ***"
-         echo -e "\${RED}==>\${NC} Script group_levels.py failed"
-         exit -1
-      fi
-      #---~---
-
-   done
-   #---~---
-
-   #--- Unload python.
-   deactivate
-   #---~---
-   ;;
-esac
-#---~---
 
 for ii in \$(seq  ${inicio} ${fim})
 do
@@ -582,54 +504,14 @@ esac
 
 cat << EOSH >> ${DIRRUN}/PostAtmos_node.${node}.sh 
 
-MONAN_ONETWO="${MONAN_ONETWO}"
 DIRRUN="${DIRRUN}"
 
-. ${SCRIPTS}/setenv.bash \${MONAN_ONETWO}
+. ${SCRIPTS}/setenv.bash
 echo "-- PBS_JOBID: \$PBS_JOBID"
 
 cd \${DIRRUN}
 
-#---~---
-#   For older versions, we group data into a single file, fix the time units and shift the
-# bounding box so it goes from 180W to 180E (as opposed to 0-360).
-#---~---
-case "\${MONAN_ONETWO}" in
--m12)
-   #--- Delete temporary files.
-   echo " - Remove existing files"
-   /bin/rm -f \${DATAOUT}/${YYYYMMDDHHi}/Post/mergetime.nc
-   /bin/rm -f \${DATAOUT}/${YYYYMMDDHHi}/Post/timeunits.nc
-   /bin/rm -f \${DATAOUT}/${YYYYMMDDHHi}/Post/MONAN_DIAG_G_POS_${EXP}_${YYYYMMDDHHi}_AllTimes.x${RES}L${N_ISOBARIC_LEV}.nc
-   #---~---
-
-   #--- Merge all files.
-   echo " - Merge single-time files:"
-   cdo mergetime \${DATAOUT}/${YYYYMMDDHHi}/Post/MONAN_DIAG_G_POS_${EXP}_${YYYYMMDDHHi}_??????????.??.??.x${RES}L${N_ISOBARIC_LEV}.nc \${DATAOUT}/${YYYYMMDDHHi}/Post/mergetime.nc
-   sleep 5
-   #---~---
-
-   #--- Fix time increment so it is consistent with the output.
-   echo " - Fix time interval so it matches the actual output:"
-   cdo settaxis,${START_DATE_YYYYMMDD},${START_HH}:00,${t_stroutsec}seconds \${DATAOUT}/${YYYYMMDDHHi}/Post/mergetime.nc \${DATAOUT}/${YYYYMMDDHHi}/Post/timeunits.nc
-   sleep 5
-   #---~---
-
-   #--- Shift the bounding box to 180W:180E (as opposed to 0:360).
-   echo " - Set the bounding box to 180W:180E:"
-   cdo sellonlatbox,-180,180,-90,90 \${DATAOUT}/${YYYYMMDDHHi}/Post/timeunits.nc \${DATAOUT}/${YYYYMMDDHHi}/Post/MONAN_DIAG_G_POS_${EXP}_${YYYYMMDDHHi}_AllTimes.x${RES}L${N_ISOBARIC_LEV}.nc
-   sleep 5
-   #---~---
-
-   #--- Delete temporary files.
-   echo " - Delete temporary files"
-   /bin/rm -f \${DATAOUT}/${YYYYMMDDHHi}/Post/mergetime.nc
-   /bin/rm -f \${DATAOUT}/${YYYYMMDDHHi}/Post/timeunits.nc
-   #---~---
-   ;;
-esac
-
-# Saving important files to the logs directory:
+# Save important files to the logs directory:
 echo " - Save relevant files to permanent locations:"
 cp -f \${EXECS}/CONVMPAS-VERSION.txt \${DATAOUT}/${YYYYMMDDHHi}/Post
 cp -f \${EXECS}/CONVMPAS-VERSION.txt \${DATAOUT}/${YYYYMMDDHHi}/Post/logs
@@ -677,8 +559,8 @@ fi
 #CR: Append this script to script PostAtmos_node.0.sh, which has been submitted.
 cd ${SCRIPTS}
 chmod 755 ${DATAOUT}/${YYYYMMDDHHi}/Post/*
-time ${SCRIPTS}/make_template.bash ${MONAN_ONETWO} ${dv_VARTABLE}                          \
-   -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
+time ${SCRIPTS}/make_template.bash ${dv_VARTABLE} -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP}     \
+   -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
 
 for ((n=0 ; n<total_nodes ; n++)) 
 do
