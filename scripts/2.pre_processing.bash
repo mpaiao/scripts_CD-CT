@@ -155,7 +155,6 @@ then
 fi
 
 
-<<<<<<< HEAD
 # Building MP_THOMPSON DBL tables
 echo ""
 echo -e  "${GREEN}==>${NC} Building MP_THOMPSON DBL tables ...\n"
