@@ -98,38 +98,24 @@ ian[0-9]*|cn-0[0-9][0-9][0-9])
    # version we are running.
    #---~---
    export HOSTNAME="ian"
-   if ${USE_ONETWO}
-   then
-      case "${COMPILER}" in
-      intel)
-         export MAKE_TARG=intel
-         export MAKE_TARG2=intel
-         ;;
-      gnu)
-         export MAKE_TARG=gfortran
-         export MAKE_TARG2=gfortran
-         ;;
-      esac
-   else
-      case "${COMPILER}" in
-      intel)
-         export MAKE_TARG=intel-xd2000
-         export MAKE_TARG2=intel2-xd2000
-         ;;
-      gnu)
-         export MAKE_TARG=gfortran-xd2000
-         export MAKE_TARG2=gfortran-xd2000
-         ;;
-      cray)
-         export MAKE_TARG=cray-xd2000
-         export MAKE_TARG2=cray-xd2000
-         ;;
-      nvidia)
-         export MAKE_TARG=nvhpc-xd2000
-         export MAKE_TARG2=nvhpc-xd2000
-         ;;
-      esac
-   fi
+   case "${COMPILER}" in
+   intel)
+      export MAKE_TARG=intel-xd2000
+      export MAKE_TARG2=intel2-xd2000
+      ;;
+   gnu)
+      export MAKE_TARG=gfortran-xd2000
+      export MAKE_TARG2=gfortran-xd2000
+      ;;
+   cray)
+      export MAKE_TARG=cray-xd2000
+      export MAKE_TARG2=cray-xd2000
+      ;;
+   nvidia)
+      export MAKE_TARG=nvhpc-xd2000
+      export MAKE_TARG2=nvhpc-xd2000
+      ;;
+   esac
    #---~---
    ;;
 *)
