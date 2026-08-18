@@ -7,6 +7,7 @@ t_iso_levels
 zgeo_isobaric
 temperature_isobaric
 isltyp
+isctyp
 ivgtyp
 landmask
 ter
