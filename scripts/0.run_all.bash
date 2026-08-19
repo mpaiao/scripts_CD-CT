@@ -234,6 +234,14 @@ then
       /bin/rm -frv ${SOURCES}
       /bin/rm -frv ${EXECS}
       /bin/rm -frv ${DIR_SCRIPTS}/run.??????????
+      
+
+      #--- Reset setenv files so it returns to vanilla state.
+      SYSTEM_SETENV="${DIR_SCRIPTS}/scripts_CD-CT/scripts/stools/setenv_${SYSTEM_KEYC}.bash"
+      MAIN_SETENV="${DIR_SCRIPTS}/scripts_CD-CT/scripts/setenv.bash"
+      git checkout ${SYSTEM_SETENV}
+      git checkout ${MAIN_SETENV}
+      #---~---
       ;;
    *)
       #--- Keep files.
