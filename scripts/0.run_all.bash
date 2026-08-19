@@ -8,9 +8,9 @@ function show_usage() {
    echo " Usage: "
    echo ""
    echo " ${0} [-h] [-o] [-z] [-bc TAG_CONVERT_MPAS] [ -bm TAG_MONAN ] \\"
-   echo "    [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] [-gc GIT_CONVERT_MPAS] \\"
-   echo "    [-gm GIT_MONAN ] [-i INPUT_PATH] [-l NLEV] [-r RES] [-s STEP] \\"
-   echo "    [-t YYYYMMDDHH] [-v VARTABLE]"
+   echo "    [-d OUTPUT_DIAG_INT] [-db DEBUG_CODE] [-e EXP ] [-f FCST] \\"
+   echo "    [-gc GIT_CONVERT_MPAS] [-gm GIT_MONAN ] [-i INPUT_PATH]   \\"
+   echo "    [-l NLEV] [-r RES] [-s STEP] [-t YYYYMMDDHH] [-v VARTABLE]  "
    echo ""
    echo " List of optional flags: "
    echo ""
@@ -20,6 +20,17 @@ function show_usage() {
    echo "                        \"develop\". This is used only by step 1."
    echo " -d OUTPUT_DIAG_INT  -- Output interval for diagnostic. The format must be"
    echo "                        \"HH:MM:SS\". This is used by steps 3 and 4."
+   echo " -db DEBUG_CODE      -- Should MONAN be compiled with debugging flags? "
+   echo "                        Supported options are (case insensitive, first letter is"
+   echo "                        sufficient): "
+   echo "                        no|none|false -- no debugging (default)"
+   echo "                        init          -- only init_atmosphere_model will be"
+   echo "                                         compiled with debugging flags"
+   echo "                        atmosphere    -- only atmosphere_model will be"
+   echo "                                         compiled with debugging flags"
+   echo "                        both|yes|true -- both init_atmosphere_model and "
+   echo "                                         atmosphere_model will be compiled with"
+   echo "                                         debugging flags"
    echo " -e EXP              -- Meteorological drivers. For example, GFS"
    echo " -f FCST             -- Simulation length in hours, e.g., 24 or 48."
    echo " -gc GIT_CONVERT     -- GitHub handle for MONAN. For example:"
@@ -74,6 +85,7 @@ github_link_MONAN="https://github.com/monanadmin/MONAN-Model.git"
 tag_or_branch_name_MONAN="release/1.4.3-rc"
 github_link_CONVERT_MPAS="https://github.com/monanadmin/convert_mpas.git"
 tag_or_branch_name_CONVERT_MPAS="release/1.2.0"
+DEBUG_CODE="none"
 EXP="GFS"
 INPUT_PATH=""
 RES=1024002
@@ -101,6 +113,10 @@ do
       ;;
    -d)
       OUTPUT_DIAG_INTERVAL="${2}"
+      shift 2 # Past flag and argument
+      ;;
+   -db)
+      DEBUG_CODE="${2}"
       shift 2 # Past flag and argument
       ;;
    -e)
@@ -310,8 +326,9 @@ case ${STEP} in
       #--- Run step
       time ${0} ${OVERWRITE} ${dv_VARTABLE}                                                \
          -bc ${tag_or_branch_name_CONVERT_MPAS} -bm ${tag_or_branch_name_MONAN}            \
-         -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP} -f ${FCST} -gc ${github_link_CONVERT_MPAS}   \
-         -gm ${github_link_MONAN} -l ${NLEV} -r ${RES} -s ${step_now} -t ${YYYYMMDDHHi}
+         -d ${OUTPUT_DIAG_INTERVAL} -db ${DEBUG_CODE} -e ${EXP} -f ${FCST}                 \
+         -gc ${github_link_CONVERT_MPAS} -gm ${github_link_MONAN} -l ${NLEV} -r ${RES}     \
+         -s ${step_now} -t ${YYYYMMDDHHi}
       #---~---
    done
    #---~---
@@ -321,7 +338,7 @@ case ${STEP} in
    #   STEP 1: Install and compile MONAN and its utility programs.
    #---~---
    time ./1.install_monan.bash -bc ${tag_or_branch_name_CONVERT_MPAS}                      \
-      -bm ${tag_or_branch_name_MONAN} -gc ${github_link_CONVERT_MPAS}                      \
+      -bm ${tag_or_branch_name_MONAN} -db ${DEBUG_CODE} -gc ${github_link_CONVERT_MPAS}    \
       -gm ${github_link_MONAN}
    #---~---
    ;;

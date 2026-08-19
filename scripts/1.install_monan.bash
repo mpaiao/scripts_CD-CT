@@ -22,11 +22,22 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-bc TAG_CONVERT_MPAS] [-bm TAG_MONAN] [-gm GIT_MONAN] \\"
-   echo "    [-gc GIT_CONVERT_MPAS]"
+   echo " ${0} [-h] [-bc TAG_CONVERT_MPAS] [-bm TAG_MONAN] [-db DEBUG_CODE] \\"
+   echo "    [-gm GIT_MONAN] [-gc GIT_CONVERT_MPAS]"
    echo ""
    echo " List of optional flags: "
    echo ""
+   echo " -db DEBUG_CODE  -- Should MONAN be compiled with debugging flags? "
+   echo "                    Supported options are (case insensitive, first letter is"
+   echo "                    sufficient): "
+   echo "                    no|none|false -- no debugging (default)"
+   echo "                    init          -- only init_atmosphere_model will be"
+   echo "                                     compiled with debugging flags"
+   echo "                    atmosphere    -- only atmosphere_model will be"
+   echo "                                     compiled with debugging flags"
+   echo "                    both|yes|true -- both init_atmosphere_model and "
+   echo "                                     atmosphere_model will be compiled with"
+   echo "                                     debugging flags"
    echo " -h              -- Shows this message."
    echo ""
    echo " List of **required** flags: "
@@ -79,11 +90,12 @@ function checkout_system() {
 #---~---
 #   Retrieve configuration.
 #---~---
-#--- Default settings (all empty)
+#--- Default settings (all empty, except for DEBUG_CODE)
 github_link_MONAN=""
 tag_or_branch_name_MONAN=""
 github_link_CONVERT_MPAS=""
 tag_or_branch_name_CONVERT_MPAS=""
+DEBUG_CODE="none"
 #---~---
 
 
@@ -101,6 +113,10 @@ do
    -bm)
       tag_or_branch_name_MONAN="${2}"
       shift 2 # past flag and argument
+      ;;
+   -db)
+      DEBUG_CODE="${2}"
+      shift 2 # Past flag and argument
       ;;
    -gc)
       github_link_CONVERT_MPAS="${2}"
@@ -141,6 +157,35 @@ then
    show_usage
    exit 2
 fi
+#---~---
+
+
+#---~---
+#   Define debugging flags
+#---~---
+DEBUG_KEY=$(echo ${DEBUG_CODE} | tr '[:upper:]' '[:lower:]' | cut -c 1-1)
+case "${DEBUG_KEY}" in
+n|f)
+   DEBUG_INIT=""
+   DEBUG_ATMOS=""
+   ;;
+i)
+   DEBUG_INIT="DEBUG=true"
+   DEBUG_ATMOS=""
+   ;;
+a)
+   DEBUG_INIT=""
+   DEBUG_ATMOS="DEBUG=true"
+   ;;
+b|y|t)
+   DEBUG_INIT="DEBUG=true"
+   DEBUG_ATMOS="DEBUG=true"
+   ;;
+*)
+   echo " Invalid debugging option (DEBUG_CODE = \"${DEBUG_CODE}\")."
+   show_usage
+   exit 2
+esac
 #---~---
 
 
@@ -278,7 +323,7 @@ export PIO=
 MAKE_OUT_FILE="make_\${DATE_TIME_NOW}_.output.atmosphere"
 
 make clean CORE=atmosphere
-make -j 8 ${MAKE_TARG} CORE=atmosphere OPENMP=true USE_PIO2=false PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
+make -j 8 ${MAKE_TARG} CORE=atmosphere ${DEBUG_ATMOS} OPENMP=true USE_PIO2=false PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
 #make -j 8 ${MAKE_TARG} CORE=atmosphere OPENMP=true USE_PIO2=true PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
 
 #make -j 8 intel-xd2000 CORE=atmosphere OPENMP=true USE_PIO2=false PRECISION=single OPTIMIZATION_LEVEL=O1 FFLAGS_OPT=-O1 CFLAGS_OPT=-O1 CXXFLAGS_OPT=-O1 2>&1 | tee \${MAKE_OUT_FILE}
@@ -294,7 +339,7 @@ make clean CORE=atmosphere
 MAKE_OUT_FILE="make_\${DATE_TIME_NOW}_.output.init_atmosphere"
 
 make clean CORE=init_atmosphere
-make -j 8 ${MAKE_TARG2} CORE=init_atmosphere OPENMP=true USE_PIO2=false PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
+make -j 8 ${MAKE_TARG2} CORE=init_atmosphere ${DEBUG_ATMOS} OPENMP=true USE_PIO2=false PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
 #make -j 8 ${MAKE_TARG2} CORE=init_atmosphere OPENMP=true USE_PIO2=true PRECISION=single 2>&1 | tee \${MAKE_OUT_FILE}
 
 #make -j 8 intel-xd2000 CORE=init_atmosphere OPENMP=true USE_PIO2=false PRECISION=single OPTIMIZATION_LEVEL=O1 FFLAGS_OPT=-O1 CFLAGS_OPT=-O1 CXXFLAGS_OPT=-O1 2>&1 | tee \${MAKE_OUT_FILE}
