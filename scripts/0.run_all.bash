@@ -82,7 +82,7 @@ function show_usage() {
 STEP=1
 OVERWRITE=""
 github_link_MONAN="https://github.com/monanadmin/MONAN-Model.git"
-tag_or_branch_name_MONAN="release/1.4.3-rc"
+tag_or_branch_name_MONAN="release/2.0.0-rc"
 github_link_CONVERT_MPAS="https://github.com/monanadmin/convert_mpas.git"
 tag_or_branch_name_CONVERT_MPAS="release/1.2.0"
 DEBUG_CODE="none"
