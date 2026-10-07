@@ -117,7 +117,7 @@ then
    if [[ ! -s ${DATAIN}/fixed/x1.${RES}.graph.info ]]
    then
       cd ${DATAIN}/fixed
-      echo -e "${GREEN}==>${NC} downloading meshes tgz files ... \n"
+      echo -e "${GREEN}==>${NC} Downloading meshes tgz files ... \n"
       cd ${DATAIN}/fixed
       wget https://www2.mmm.ucar.edu/projects/mpas/atmosphere_meshes/x1.${RES}.tar.gz
       wget https://www2.mmm.ucar.edu/projects/mpas/atmosphere_meshes/x1.${RES}_static.tar.gz

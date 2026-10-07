@@ -318,7 +318,3 @@ then
    time ./make_initsst.bash -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
 fi
 #---~---
-
-
-
-

@@ -71,6 +71,7 @@ export PNETCDFDIR=${PNETCDF}
 export DIRDADOS=/mnt/beegfs/monan/dados/MONAN_v2.0.x
 export OPERDIR=/oper/dados/ioper/tempo
 export GCCCIS=/mnt/beegfs/monan/CIs
+export SST_DIR=${GCCCIS}/sst
 
 
 # --- Others Vabriables ---

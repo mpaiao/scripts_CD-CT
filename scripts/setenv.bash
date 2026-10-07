@@ -27,7 +27,7 @@ export COMPILER=intel
 #export COMPILER=cray
 #export COMPILER=nvidia
 
-# Squeduler detect:
+# Scheduler detect:
 if command -v sbatch &> /dev/null
 then
    export SCHEDULER_SYSTEM="SLURM"
