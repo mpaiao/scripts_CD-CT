@@ -152,10 +152,10 @@ done
 files_needed=("${SCRIPTS}/namelists/namelist.init_atmosphere.TEMPLATE" "${SCRIPTS}/namelists/streams.init_atmosphere.TEMPLATE" "${DATAIN}/fixed/x1.${RES}.graph.info.part.${cores}" "${DATAIN}/fixed/x1.${RES}.static.nc" "${DATAIN}/fixed/x1.${RES}.ugwp_oro_data.nc" "${DATAOUT}/${YYYYMMDDHHi}/Pre/${EXP}:${start_date:0:13}" "${EXECS}/init_atmosphere_model")
 for file in "${files_needed[@]}"
 do
-  if [ ! -s "${file}" ]
+  if [[ ! -s "${file}" ]]
   then
-    echo -e  "\n${RED}==>${NC} ***** ATTENTION *****\n"	  
-    echo -e  "${RED}==>${NC} [${0}] At least the file ${file} was not generated. \n"
+    echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"
+    echo -e  "${RED}==>${NC} [${0}] File ${file} was not found. \n"
     exit -1
   fi
 done
@@ -180,9 +180,8 @@ chmod 755 ${DATAOUT}/${YYYYMMDDHHi}/Pre/*
 
 rm -f ${DIRRUN}/initsst.bash 
 
-
-if [ ${SCHEDULER_SYSTEM} != "GENERIC" ]
-then
+case "${SCHEDULER_SYSTEM}" in
+GENERIC)
    sed -e "s,#JOBNAME#,${INITATMOS_jobname},g;
    s,#NNODES#,${INITATMOS_nnodes},g;
    s,#NCPUS#,${INITATMOS_ncpus},g;
@@ -193,10 +192,12 @@ then
    s,#WALLTIME#,${INITATMOS_walltime},g;
    s,#OUTPUTJOB#,${DATAOUT}/${YYYYMMDDHHi}/Pre/logs/initsst.bash.o,g;
    s,#ERRORJOB#,${DATAOUT}/${YYYYMMDDHHi}/Pre/logs/initsst.bash.e,g" \
-   ${SCRIPTS}/stools/submit_${SYSTEM_KEY}.bash_TEMPLATE > ${DIRRUN}/initsst.bash 
-else
-   echo "#!/bin/bash " > ${DIRRUN}/initsst.bash 
-fi
+   ${SCRIPTS}/stools/submit_${SYSTEM_KEY}.bash_TEMPLATE > ${DIRRUN}/initsst.bash
+   ;; 
+*)
+   echo "#!/bin/bash " > ${DIRRUN}/initsst.bash
+   ;;
+esac
 
 cat << EOF0 >> ${DIRRUN}/initsst.bash 
 
@@ -214,13 +215,16 @@ cd ${DIRRUN}
 date
 beg_secs=\`date +"%s"\`
 
-if [ "$HOSTNAME" = "egeon" ]; then
+case "${HOSTNAME}" in
+egeon)
    echo "-- SLURM_JOB_ID: \$SLURM_JOB_ID"
    time mpirun -np ${INITATMOS_ncores} ./\${executable}
-else
+   ;;
+*)
    echo "-- PBS_JOBID: \$PBS_JOBID"
    time mpirun --ppn ${INITATMOS_ncpn} -np ${INITATMOS_ncores} --depth=${INITATMOS_nthreads} --cpu-bind depth ./\${executable}
-fi
+   ;;
+esac
 
 date
 end_secs=\`date +"%s"\`
@@ -238,21 +242,21 @@ EOF0
 chmod a+x ${DIRRUN}/initsst.bash
 
 case "${SCHEDULER_SYSTEM}" in
-   SLURM)
-      echo -e  "${GREEN}==>${NC} Sbatch initsst.bash...\n"
-      cd ${DIRRUN}
-      sbatch --wait ${DIRRUN}/initsst.bash
-      ;;
-    PBS)
-      echo -e  "${GREEN}==>${NC} qsub initsst.bash...\n"
-      cd ${DIRRUN}
-      qsub -W block=true ${DIRRUN}/initsst.bash
-      ;;
-#    GENERIC)
-#      echo "Nenhum gerenciador detectado"
-#      cd ${DIRRUN}
-#      ${DIRRUN}/initsst.bash
-#      ;;
+SLURM)
+   echo -e  "${GREEN}==>${NC} Sbatch initsst.bash...\n"
+   cd ${DIRRUN}
+   sbatch --wait ${DIRRUN}/initsst.bash
+   ;;
+ PBS)
+   echo -e  "${GREEN}==>${NC} qsub initsst.bash...\n"
+   cd ${DIRRUN}
+   qsub -W block=true ${DIRRUN}/initsst.bash
+   ;;
+#GENERIC)
+#  echo "Nenhum gerenciador detectado"
+#  cd ${DIRRUN}
+#  ${DIRRUN}/initsst.bash
+#  ;;
 esac
 mv ${DIRRUN}/initsst.bash ${DATAOUT}/${YYYYMMDDHHi}/Pre/logs
 
@@ -263,11 +267,11 @@ chmod a+r ${DATAOUT}/${YYYYMMDDHHi}/Pre/logs/initsst.bash.o.${JOBID}
 chmod a+r ${DATAOUT}/${YYYYMMDDHHi}/Pre/logs/initsst.bash.e.${JOBID}
 
 
-if [ ! -s ${DATAOUT}/${YYYYMMDDHHi}/Pre/x1.${RES}.init.nc ]
+if [[ ! -s ${DATAOUT}/${YYYYMMDDHHi}/Pre/x1.${RES}.init.nc ]]
 then
-  echo -e  "\n${RED}==>${NC} ***** ATTENTION *****\n"	
-  echo -e  "${RED}==>${NC} Init Atmosphere phase fails! Check logs at ${DATAOUT}/logs/initsst.* .\n"
-  echo -e  "${RED}==>${NC} Exiting script. \n"
+  echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"
+  echo -e  "${RED}==>${NC} Init Atmosphere phase failed! Check logs at ${DATAOUT}/logs/initsst.* .\n"
+  echo -e  "${RED}==>${NC} Quitting script. \n"
   exit -1
 fi
 chmod 775 ${DATAOUT}/${YYYYMMDDHHi}/Pre/*
