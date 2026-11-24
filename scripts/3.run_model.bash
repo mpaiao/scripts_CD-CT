@@ -349,7 +349,10 @@ then
    done
    cp -f ${DATAOUT}/${YYYYMMDDHHi}/Pre/x1.${RES}.sfc_update.nc ${DIRRUN}
    sed -i "s,config_sst_update = .*,config_sst_update = true," ${DIRRUN}/namelist.atmosphere
-   sed -i "37s,none,86400," ${DIRRUN}/streams.atmosphere
+   sed -i "s,#DT_SST#,86400," ${DIRRUN}/streams.atmosphere
+else
+   sed -i "s,config_sst_update = .*,config_sst_update = false," ${DIRRUN}/namelist.atmosphere
+   sed -i "s,#DT_SST#,none," ${DIRRUN}/streams.atmosphere
 fi
 
 
