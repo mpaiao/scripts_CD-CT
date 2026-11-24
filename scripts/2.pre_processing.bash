@@ -24,12 +24,18 @@ umask 022
 function show_usage() {
    echo " Usage: "
    echo ""
-   echo " ${0} [-h] [-o] [-e EXP ] [-f FCST] [-r RES] [-t YYYYMMDDHH]"
+   echo " ${0} [-h] [-o] [-e EXP ] [-f FCST] [-r RES] [-t YYYYMMDDHH] \\"
+   echi "    [-u UPDATE_SST]"
    echo ""
    echo " List of optional flags: "
    echo ""
    echo " -h              -- Shows this message."
    echo " -o              -- Overwrite static files."
+   echo " -u UPDATE_SST   -- Should MONAN enable SST updates? Options are (case"
+   echo "                    insensitive, first letter is sufficient)"
+   echo "                    yes|true - Update daily SST"
+   echo "                    no|false - Keep daily SST constant (default)."
+   echo "                               This still allows enabling SST diurnal cycle." 
    echo ""
    echo " List of **required** flags when -c is not set: "
    echo ""
@@ -58,6 +64,7 @@ EXP=""
 RES=""
 YYYYMMDDHHi=""
 FCST=""
+UPDATE_SST=false
 #---~---
 
 
@@ -90,6 +97,10 @@ do
       YYYYMMDDHHi="${2}"
       shift 2 # past flag and argument
       ;;
+   -u)
+      UPDATE_SST="${2}"
+      shift 2 # past flag and argument
+      ;;
    *)
       echo ""
       echo " Option \"${key}\" is not valid."
@@ -119,6 +130,40 @@ then
 fi
 #---~---
 
+#---~---
+#   Make sure the initial conditions are valid.
+#---~---
+case "${EXP}" in
+GFS)
+   echo -e "${GREEN}==>${NC} Initial conditions: ${EXP}.\n"
+   ;;
+*)
+   echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"   
+   echo -e  "${RED}==>${NC} [${0}] Invalid initial conditions (${EXP}). \n"
+   exit -1
+   ;;
+esac
+#---~---
+
+
+#---~---
+#   Define debugging flags
+#---~---
+UPDATE_SST=$(echo ${UPDATE_SST} | tr '[:upper:]' '[:lower:]' | cut -c 1-1)
+case "${DEBUG_KEY}" in
+n|f)
+   UPDATE_SST=false
+   ;;
+y|t)
+   UPDATE_SST=true
+   ;;
+*)
+   echo " Invalid SST update flag setting (UPDATE_SST = \"${UPDATE_SST}\")."
+   show_usage
+   exit 2
+esac
+#---~---
+
 
 #--- Set environment variables exports:
 . setenv.bash
@@ -138,7 +183,6 @@ yyyymmddhhf=$(date +"%Y%m%d%H" -d "${yyyymmddi} ${hhi}:00 ${FCST} hours" )
 final_date=${yyyymmddhhf:0:4}-${yyyymmddhhf:4:2}-${yyyymmddhhf:6:2}_${yyyymmddhhf:8:2}.00.00
 export DIRRUN=${DIRHOMED}/run.${YYYYMMDDHHi}; rm -fr ${DIRRUN}; mkdir -p ${DIRRUN}
 #-------------------------------------------------------
-
 
 
 echo -e  "${GREEN}==>${NC} Scripts_CD-CT last commit: \n"
@@ -264,6 +308,15 @@ time ./make_degrib.bash -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
 #--- Run the atmosphere initialisation step.
 echo -e  "${GREEN}==>${NC} Submitting Init Atmosphere...\n"
 time ./make_initatmos.bash -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
+#---~---
+
+
+#--- Run the SST initialisation step.
+if ${UPDATE_SST}
+then
+   echo -e  "${GREEN}==>${NC} Submitting Init Sea Surface Temperature...\n"
+   time ./make_initsst.bash -e ${EXP} -f ${FCST} -r ${RES} -t ${YYYYMMDDHHi}
+fi
 #---~---
 
 

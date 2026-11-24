@@ -10,7 +10,8 @@ function show_usage() {
    echo " ${0} [-h] [-o] [-z] [-bc TAG_CONVERT_MPAS] [ -bm TAG_MONAN ] \\"
    echo "    [-d OUTPUT_DIAG_INT] [-db DEBUG_CODE] [-e EXP ] [-f FCST] \\"
    echo "    [-gc GIT_CONVERT_MPAS] [-gm GIT_MONAN ] [-i INPUT_PATH]   \\"
-   echo "    [-l NLEV] [-r RES] [-s STEP] [-t YYYYMMDDHH] [-v VARTABLE]  "
+   echo "    [-l NLEV] [-r RES] [-s STEP] [-t YYYYMMDDHH]              \\"
+   echo "    [-u UPDATE_SST] [-v VARTABLE]  "
    echo ""
    echo " List of optional flags: "
    echo ""
@@ -62,6 +63,11 @@ function show_usage() {
    echo " -t YYYYMMDDHH       -- Initial time. For example if 22 Sept 2025 00 UTC, the"
    echo "                        argument should be 2025092200. This is used by steps"
    echo "                        2, 3 and 4."
+   echo " -u UPDATE_SST       -- Should MONAN enable SST updates? Options are (case"
+   echo "                        insensitive, first letter is sufficient)"
+   echo "                        yes|true - Update daily SST"
+   echo "                        no|false - Keep daily SST constant (default)."
+   echo "                                   This still allows enabling SST diurnal cycle." 
    echo " -v VARTABLE         -- Suffix for defining which version of the"
    echo "                        stream_list_atmosphere.diagnostics template to use."
    echo "                        The default is to not use any suffix. This is used only"
@@ -94,6 +100,7 @@ FCST=24
 NLEV=55
 OUTPUT_DIAG_INTERVAL="03:00:00"
 VARTABLE=""
+UPDATE_SST=false
 ZERO_STATE=false
 #---~---
 
@@ -161,6 +168,10 @@ do
       ;;
    -t)
       YYYYMMDDHHi="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -u)
+      UPDATE_SST="${2}"
       shift 2 # past flag and argument
       ;;
    -v)

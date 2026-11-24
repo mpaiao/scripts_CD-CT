@@ -22,11 +22,16 @@ function show_usage() {
    echo " Usage: "
    echo ""
    echo " ${0} [-h] [-v VARTABLE] [-d OUTPUT_DIAG_INT] [-e EXP ] [-f FCST] \\"
-   echo "    [-l NLEV] [-r RES] [-t YYYYMMDDHH]"
+   echo "    [-l NLEV] [-r RES] [-t YYYYMMDDHH] [-u UPDATE_SST]"
    echo ""
    echo " List of optional flags: "
    echo ""
    echo " -h                  -- Shows this message."
+   echo " -u UPDATE_SST       -- Should MONAN enable SST updates? Options are (case"
+   echo "                        insensitive, first letter is sufficient)"
+   echo "                        yes|true - Update daily SST"
+   echo "                        no|false - Keep daily SST constant (default)."
+   echo "                                   This still allows enabling SST diurnal cycle." 
    echo " -v VARTABLE         -- Suffix for defining which version of the"
    echo "                        stream_list_atmosphere.diagnostics template to use."
    echo "                        The default is to not use any suffix."
@@ -63,6 +68,7 @@ FCST=""
 NLEV=""
 OUTPUT_DIAG_INTERVAL=""
 VARTABLE=""
+UPDATE_SST=false
 #---~---
 
 
@@ -97,6 +103,10 @@ do
       ;;
    -t)
       YYYYMMDDHHi="${2}"
+      shift 2 # past flag and argument
+      ;;
+   -u)
+      UPDATE_SST="${2}"
       shift 2 # past flag and argument
       ;;
    -v)
@@ -135,6 +145,40 @@ then
    show_usage
    exit 2
 fi
+#---~---
+
+#---~---
+#   Make sure the initial conditions are valid.
+#---~---
+case "${EXP}" in
+GFS)
+   echo -e "${GREEN}==>${NC} Initial conditions: ${EXP}.\n"
+   ;;
+*)
+   echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"   
+   echo -e  "${RED}==>${NC} [${0}] Invalid initial conditions (${EXP}). \n"
+   exit -1
+   ;;
+esac
+#---~---
+
+
+#---~---
+#   Define debugging flags
+#---~---
+UPDATE_SST=$(echo ${UPDATE_SST} | tr '[:upper:]' '[:lower:]' | cut -c 1-1)
+case "${DEBUG_KEY}" in
+n|f)
+   UPDATE_SST=false
+   ;;
+y|t)
+   UPDATE_SST=true
+   ;;
+*)
+   echo " Invalid SST update flag setting (UPDATE_SST = \"${UPDATE_SST}\")."
+   show_usage
+   exit 2
+esac
 #---~---
 
 
@@ -250,7 +294,7 @@ do
   if [[ ! -s "${file}" ]]
   then
     echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"   
-    echo -e  "${RED}==>${NC} [${0}] At least the file ${file} was not generated. \n"
+    echo -e  "${RED}==>${NC} [${0}] File ${file} was not found. \n"
     exit -1
   fi
 done
@@ -288,6 +332,25 @@ cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.diagnostics${VARTABLE} ${DIRRU
 cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.diag_ugwp${VARTABLE} ${DIRRUN}/stream_list.atmosphere.diag_ugwp
 cp -f ${SCRIPTS}/namelists/stream_list.atmosphere.surface ${DIRRUN}
 cp -f ${SCRIPTS}/setenv.bash ${DIRRUN}
+
+
+# If SST is to be updated, make sure that files needed exist, and that the namelist is set to update SST.
+if ${UPDATE_SST}
+then
+   files_needed=("${DATAOUT}/${YYYYMMDDHHi}/Pre/x1.${RES}.sfc_update.nc")
+   for file in "${files_needed[@]}"
+   do
+      if [[ ! -s "${file}" ]]
+      then
+         echo -e  "\n${RED}==>${NC} ***** FATAL ERROR *****\n"
+         echo -e  "${RED}==>${NC} [${0}] File ${file} was not generated. \n"
+         exit -1
+      fi
+   done
+   cp -f ${DATAOUT}/${YYYYMMDDHHi}/Pre/x1.${RES}.sfc_update.nc ${DIRRUN}
+   sed -i "s,config_sst_update = .*,config_sst_update = true," ${DIRRUN}/namelist.atmosphere
+   sed -i "37s,none,86400," ${DIRRUN}/streams.atmosphere
+fi
 
 
 chmod 755 ${DIRRUN}
