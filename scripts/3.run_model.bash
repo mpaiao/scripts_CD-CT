@@ -167,7 +167,7 @@ esac
 #   Define debugging flags
 #---~---
 UPDATE_SST=$(echo ${UPDATE_SST} | tr '[:upper:]' '[:lower:]' | cut -c 1-1)
-case "${DEBUG_KEY}" in
+case "${UPDATE_SST}" in
 n|f)
    UPDATE_SST=false
    ;;
