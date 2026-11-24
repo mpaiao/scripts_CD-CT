@@ -25,7 +25,7 @@ function show_usage() {
    echo " Usage: "
    echo ""
    echo " ${0} [-h] [-o] [-e EXP ] [-f FCST] [-r RES] [-t YYYYMMDDHH] \\"
-   echi "    [-u UPDATE_SST]"
+   echo "    [-u UPDATE_SST]"
    echo ""
    echo " List of optional flags: "
    echo ""
@@ -150,7 +150,7 @@ esac
 #   Define debugging flags
 #---~---
 UPDATE_SST=$(echo ${UPDATE_SST} | tr '[:upper:]' '[:lower:]' | cut -c 1-1)
-case "${DEBUG_KEY}" in
+case "${UPDATE_SST}" in
 n|f)
    UPDATE_SST=false
    ;;
