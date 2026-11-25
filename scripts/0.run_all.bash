@@ -366,7 +366,7 @@ case ${STEP} in
    #   STEP 2: Run the pre-processing step, and make initial/boundary conditions if needed.
    #---~---
    time ./2.pre_processing.bash ${OVERWRITE} -e ${EXP} -f ${FCST} -r ${RES}                \
-      -t ${YYYYMMDDHHi}
+      -t ${YYYYMMDDHHi} -u ${UPDATE_SST}
    #---~---
    ;;
 3)
@@ -374,7 +374,7 @@ case ${STEP} in
    #   STEP 3: Run the model.
    #---~---
    time ./3.run_model.bash ${dv_VARTABLE} -d ${OUTPUT_DIAG_INTERVAL} -e ${EXP} -f ${FCST}  \
-      -l ${NLEV} -r ${RES} -t ${YYYYMMDDHHi}
+      -l ${NLEV} -r ${RES} -t ${YYYYMMDDHHi} -u ${UPDATE_SST}
    #---~---
    ;;
 4)
